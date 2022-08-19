@@ -64,12 +64,51 @@ class RemoteFeedLoaderTests: XCTestCase {
         }
     }
     
-    func test_load_deliversNoItemsOn200HTTPResponse() {
+    func test_load_deliversNoItemsOn200HTTPResponseWithEmptyList() {
         let (sut, client) = makeSUT()
         
         expect(sut, toCompleteWith: .success([])) {
             let emptyListJson = Data("{\"items\": []}".utf8)
             client.completeWith(statusCode: 200, data: emptyListJson)
+        }
+    }
+    
+    func test_load_deliversItemsOn200HTTPResponsewithJSONItems() {
+        let (sut, client) = makeSUT()
+
+        let item1 = FeedItem(
+            id: UUID(),
+            description: nil,
+            location: nil,
+            imageURL: RemoteFeedLoaderTests.testURL
+        )
+        
+        let item1JSON = [
+            "id": item1.id.uuidString,
+            "image": item1.imageURL.absoluteString
+        ]
+        
+        let item2 = FeedItem(
+            id: UUID(),
+            description: "description",
+            location: "location",
+            imageURL: RemoteFeedLoaderTests.testURL.appendingPathComponent("another")
+        )
+        
+        let item2JSON = [
+            "id": item2.id.uuidString,
+            "description": item2.description,
+            "location": item2.location,
+            "image": item2.imageURL.absoluteString
+        ]
+        
+        let itemsJSON = [
+            "items": [item1JSON, item2JSON]
+        ]
+        
+        expect(sut, toCompleteWith: .success([item1, item2])) {
+            let json = try! JSONSerialization.data(withJSONObject: itemsJSON)
+            client.completeWith(statusCode: 200, data: json)
         }
     }
 
@@ -79,8 +118,10 @@ class RemoteFeedLoaderTests: XCTestCase {
         action()
         XCTAssertEqual(capturedResults, [result], file: file, line: line)
     }
+                             
+    static let testURL = URL(string: "test.com")!
     
-    private func makeSUT(url: URL = URL(string: "test.com")!) -> (sut: RemoteFeedLoader, client: HTTPClientSpy) {
+    private func makeSUT(url: URL = testURL) -> (sut: RemoteFeedLoader, client: HTTPClientSpy) {
         let client = HTTPClientSpy()
         let sut = RemoteFeedLoader(url: url, client: client)
         return (sut, client)
