@@ -38,7 +38,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     
     func test_load_deliversErrorOnClientError() {
         let (sut, client) = makeSUT()
-        expect(sut, toCompleteWith: .failure(.connectivity)) {
+        expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.connectivity)) {
             let clientError = NSError(domain: "Test", code: 0)
             client.completeWith(error: clientError)
         }
@@ -49,7 +49,7 @@ class RemoteFeedLoaderTests: XCTestCase {
         
         let samples = [199, 201, 300, 400, 500]
         samples.enumerated().forEach { index, code in
-            expect(sut, toCompleteWith: .failure(.invalidData)) {
+            expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.invalidData)) {
                 let data = makeItemsJSON([])
                 client.completeWith(statusCode: code, data: data, at: index)
             }
@@ -59,7 +59,7 @@ class RemoteFeedLoaderTests: XCTestCase {
     func test_load_deliversErrorOn200HTTPResponseWithInvalidJson() {
         let (sut, client) = makeSUT()
         
-        expect(sut, toCompleteWith: .failure(.invalidData)) {
+        expect(sut, toCompleteWith: .failure(RemoteFeedLoader.Error.invalidData)) {
             let invalidJson = Data("invalid json".utf8)
             client.completeWith(statusCode: 200, data: invalidJson)
         }
@@ -139,7 +139,7 @@ class RemoteFeedLoaderTests: XCTestCase {
             switch (capturedResult, expectedResult) {
             case let (.success(capturedItems), .success(expectedItems)):
                 XCTAssertEqual(capturedItems, expectedItems, file: file, line: line)
-            case let (.failure(capturedError), .failure(expectedError)):
+            case let (.failure(capturedError as RemoteFeedLoader.Error), .failure(expectedError as RemoteFeedLoader.Error)):
                 XCTAssertEqual(capturedError, expectedError, file: file, line: line)
             default:
                 XCTFail("Expected result \(expectedResult) got captured result: \(capturedResult)", file: file, line: line)
