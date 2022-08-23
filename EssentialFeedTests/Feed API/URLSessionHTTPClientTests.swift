@@ -10,8 +10,16 @@ import XCTest
 import EssentialFeed
 
 class URLSessionHTTPClientTests: XCTestCase {
-    func test_getFromUrl_failsOnRequestError() {
+    
+    override class func setUp() {
         URLProtocolStub.startInterceptingRequests()
+    }
+    
+    override class func tearDown() {
+        URLProtocolStub.stopInterceptingRequests()
+    }
+    
+    func test_getFromUrl_failsOnRequestError() {
         let url = URL(string: "fake.com")!
         let error = NSError(domain: "Test Error", code: 0)
         URLProtocolStub.stub(data: nil, response: nil, error: error)
@@ -30,11 +38,9 @@ class URLSessionHTTPClientTests: XCTestCase {
         }
         
         wait(for: [exp], timeout: 1.0)
-        URLProtocolStub.stopInterceptingRequests()
     }
     
     func test_getFromUrl_performsGetWithURL() {
-        URLProtocolStub.startInterceptingRequests()
         
         let url = URL(string: "fake.com")!
         let sut = URLSessionHTTPClient()
@@ -49,7 +55,6 @@ class URLSessionHTTPClientTests: XCTestCase {
         }
         
         wait(for: [exp], timeout: 1.0)
-        URLProtocolStub.stopInterceptingRequests()
     }
     
    
