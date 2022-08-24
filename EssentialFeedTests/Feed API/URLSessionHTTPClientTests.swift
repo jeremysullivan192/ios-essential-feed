@@ -55,6 +55,30 @@ class URLSessionHTTPClientTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
     }
     
+    func test_getFromUrl_deliversDataOnRequestSuccess() {
+        let data = anyData()
+        let response = anyHTTPURLResponse()
+        URLProtocolStub.stub(data: data, response: response, error: nil)
+        
+        let exp = expectation(description: "Wait for completion")
+        
+        var receivedSuccess: (data: Data, response: HTTPURLResponse)? = nil
+        makeSUT().get(from: anyURL()) { result in
+            switch result {
+            case let .success(data, response):
+                receivedSuccess = (data, response)
+            default:
+                XCTFail("Expected \(data) and \(response) but got \(result) instead.")
+            }
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
+        XCTAssertEqual(data, receivedSuccess?.data)
+        XCTAssertEqual(response.url, receivedSuccess?.response.url)
+        XCTAssertEqual(response.statusCode, receivedSuccess?.response.statusCode)
+    }
+    
    
     
     //MARK: Helpers
