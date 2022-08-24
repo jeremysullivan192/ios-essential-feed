@@ -29,8 +29,15 @@ class URLSessionHTTPClientTests: XCTestCase {
     }
     
     func test_getFromUrl_failsOnInvalidScenarios() {
-        let receivedError = resultErrorFor(data: nil, response: nil, error: nil)
-        XCTAssertNotNil(receivedError)
+        XCTAssertNotNil(resultErrorFor(data: nil, response: nil, error: nil))
+        XCTAssertNotNil(resultErrorFor(data: nil, response: anyNonHTTPURLResponse(), error: nil))
+        XCTAssertNotNil(resultErrorFor(data: nil, response: anyHTTPURLResponse(), error: nil))
+        XCTAssertNotNil(resultErrorFor(data: anyData(), response: nil, error: nil))
+        XCTAssertNotNil(resultErrorFor(data: anyData(), response: nil, error: anyNSError()))
+        XCTAssertNotNil(resultErrorFor(data: nil, response: anyNonHTTPURLResponse(), error: anyNSError()))
+        XCTAssertNotNil(resultErrorFor(data: nil, response: anyHTTPURLResponse(), error: anyNSError()))
+        XCTAssertNotNil(resultErrorFor(data: anyData(), response: anyNonHTTPURLResponse(), error: anyNSError()))
+        XCTAssertNotNil(resultErrorFor(data: anyData(), response: anyHTTPURLResponse(), error: anyNSError()))
     }
     
     func test_getFromUrl_performsGetWithURL() {
@@ -58,7 +65,7 @@ class URLSessionHTTPClientTests: XCTestCase {
         return sut
     }
     
-    private func resultErrorFor(data: Data?, response: HTTPURLResponse?, error: Error?) -> NSError? {
+    private func resultErrorFor(data: Data?, response: URLResponse?, error: Error?, file: StaticString = #filePath, line: UInt = #line) -> NSError? {
         URLProtocolStub.stub(data: data, response: response, error: error)
         
         let exp = expectation(description: "Wait for completion")
@@ -69,7 +76,7 @@ class URLSessionHTTPClientTests: XCTestCase {
             case let .failure(capturedError as NSError):
                 recievedError = capturedError
             default:
-                XCTFail("Expected \(error) but got \(result) instead.")
+                XCTFail("Expected \(error) but got \(result) instead.", file: file, line: line)
             }
             exp.fulfill()
         }
@@ -82,8 +89,19 @@ class URLSessionHTTPClientTests: XCTestCase {
         return URL(string: "fake.com")!
     }
     
+    private func anyData() -> Data {
+        return Data(count: 1)
+    }
     private func anyNSError() -> NSError {
         return NSError(domain: "Test Error", code: 0)
+    }
+    
+    private func anyNonHTTPURLResponse() -> URLResponse {
+        return URLResponse(url: anyURL(), mimeType: nil, expectedContentLength: 1, textEncodingName: nil)
+    }
+    
+    private func anyHTTPURLResponse() -> HTTPURLResponse {
+        return HTTPURLResponse(url: anyURL(), statusCode: 200, httpVersion: nil, headerFields: nil)!
     }
 
     private class URLProtocolStub: URLProtocol {
