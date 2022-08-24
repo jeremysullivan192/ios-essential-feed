@@ -41,6 +41,24 @@ class URLSessionHTTPClientTests: XCTestCase {
         wait(for: [exp], timeout: 1.0)
     }
     
+    func test_getFromUrl_failsOnInvalidScenarios() {
+        let url = URL(string: "fake.com")!
+        URLProtocolStub.stub(data: nil, response: nil, error: nil)
+        
+        let exp = expectation(description: "Wait for completion")
+        
+        makeSUT().get(from: url) { result in
+            switch result {
+            case let .failure(capturedError as NSError):
+                XCTAssertNotNil(capturedError)
+            default:
+                XCTFail("Expected an error but got \(result) instead.")
+            }
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1.0)
+    }
     
     func test_getFromUrl_performsGetWithURL() {
         

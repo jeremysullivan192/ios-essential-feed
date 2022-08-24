@@ -22,11 +22,15 @@ public class URLSessionHTTPClient: HTTPClient {
     public init(session: URLSession = .shared) {
         self.session = session
     }
+    
+    struct InvalidNetworkScenario: Error {}
 
     public func get(from url : URL, completion: @escaping (HTTPClientResult) -> Void) {
         session.dataTask(with: url) { _, _, error in
             if let error = error {
                 completion(.failure(error))
+            } else {
+                completion(.failure(InvalidNetworkScenario()))
             }
         }.resume()
     }
