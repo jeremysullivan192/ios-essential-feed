@@ -112,8 +112,8 @@ class URLSessionHTTPClientTests: XCTestCase {
         
         var receivedResult: HTTPClientResult!
         makeSUT().get(from: anyURL()) { result in
-            exp.fulfill()
             receivedResult = result
+            exp.fulfill()
         }
         
         wait(for: [exp], timeout: 1.0)
